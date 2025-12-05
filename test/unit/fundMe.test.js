@@ -91,17 +91,17 @@ const { developmentChains } = require("../../helper-hardhat-config")
     )
 
     //window closed, target is reached, getFund success
-    // it("owner, window closed, target reached, getFund success",
-    //     async function(){
-    //         await fundMe.fund({value: ethers.parseEther("0.008")})
-    //         await time.increase(200)
-    //         await mine()
-    //         // await fundMe.getFund()
-    //         // expect(await fundMe.getFundSuccess())
-    //         // .equals(true)
-    //         await expect(fundMe.getFund()).to.be.emit(fundMe,"FundWithdrawByOwner").withArgs(ethers.parseEther("0.008"))
-    //     }
-    // )
+    it("owner, window closed, target reached, getFund success",
+        async function(){
+            await fundMe.fund({value: ethers.parseEther("0.008")})
+            await time.increase(200)
+            await mine()
+            // await fundMe.getFund()
+            // expect(await fundMe.getFundSuccess())
+            // .equals(true)
+            await expect(fundMe.getFund()).to.be.emit(fundMe,"FundWithdrawByOwner").withArgs(ethers.parseEther("0.008"))
+        }
+    )
 
     //reFund
     //window closed, target is not reached, funder has balance
