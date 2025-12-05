@@ -4,7 +4,7 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
 
 contract FundMe {
     mapping(address => uint256) public fundersToAmount;
-    AggregatorV3Interface internal dataFeed;
+    AggregatorV3Interface public dataFeed;
     uint256 constant MINIMUM_VALUE = 4 * 10 ** 18;//USD
     uint256 constant TARGET = 20 * 10 ** 18;
     address public owner;
@@ -12,10 +12,12 @@ contract FundMe {
     uint256 lockTime;
     address erc20Addr; 
     bool public getFundSuccess = false;
+    event FundWithdrawByOwner(uint256);
+    event RefundByFunder(address, uint256);
 
-    constructor(uint256 _lockTime) {
+    constructor(uint256 _lockTime,address dataFeedAddr) {
         dataFeed = AggregatorV3Interface(
-            0x694AA1769357215DE4FAC081bf1f309aDC325306
+            dataFeedAddr
         );
         owner = msg.sender;
         deploymentTimestamp = block.timestamp;
@@ -63,10 +65,12 @@ contract FundMe {
         // require(success, "tx failed");
 
         bool success;
-        (success, ) = payable(msg.sender).call{value: address(this).balance}("");
+        uint256 fundBalance = address(this).balance;
+        (success, ) = payable(msg.sender).call{value: fundBalance}("");
         require(success, "transfer tx failed");
         fundersToAmount[msg.sender]=0;
         getFundSuccess = true;
+        emit FundWithdrawByOwner(fundBalance);
     }
 
     function refund() external windowClose{
@@ -74,9 +78,11 @@ contract FundMe {
         require(fundersToAmount[msg.sender]!=0, "there is no fund for you");
         // require(block.timestamp >= deploymentTimestamp+lockTime,"time isn't end,can't refund");
         bool success;
-        (success, ) = payable(msg.sender).call{value: fundersToAmount[msg.sender]}("");
+        uint256 funderBalance = fundersToAmount[msg.sender];
+        (success, ) = payable(msg.sender).call{value: funderBalance}("");
         require(success, "transfer tx failed");
         fundersToAmount[msg.sender]=0;
+        emit RefundByFunder(msg.sender,funderBalance);
 
     }
 
@@ -90,7 +96,7 @@ contract FundMe {
     }
 
     modifier windowClose(){
-        require(block.timestamp >= deploymentTimestamp+lockTime,"time isn't end,can't refund");
+        require(block.timestamp >= deploymentTimestamp+lockTime,"window is not closed");
         _;
     }
 
