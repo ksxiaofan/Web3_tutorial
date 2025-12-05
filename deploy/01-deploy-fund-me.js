@@ -29,6 +29,15 @@ module.exports= async({getNamedAccounts,deployments})=>{
         log: true
     })
     console.log("contract address:",fundMe.address)
+
+    if(hre.network.config.chainId == 11155111 && process.env.PRIVATE_KEY){
+        await hre.run("verify:verify", {
+            address: fundMe.address,
+            constructorArguments: [LOCK_TIME, dataFeedAddr],
+        });
+    }else{
+        console.log("Network is not sepolia, verification skipped...")
+    }
 }
 
 module.exports.tags = ["all","fundme"]
